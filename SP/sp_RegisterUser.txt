@@ -1,0 +1,13 @@
+CREATE OR ALTER PROCEDURE sp_RegisterUser
+    @Email NVARCHAR(100),
+    @PasswordHash NVARCHAR(200),
+    @FullName NVARCHAR(200),
+    @Role DATETIME = NULL
+AS
+BEGIN
+    IF @CreatedAt IS NULL
+        SET @CreatedAt = GETDATE();
+
+    INSERT INTO AppUsers (Email, PasswordHash, FullName, Role
+    VALUES (@Email, @PasswordHash, @FullName, @Role
+END

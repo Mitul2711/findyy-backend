@@ -1,10 +1,11 @@
-﻿using findyy.Model.Auth;
+﻿using findyy.DTO.Auth;
+using findyy.Model.Auth;
 
 namespace LocalBizFinder.DataAccess.Interfaces
 {
     public interface IUserRepository
     {
-        Task RegisterAsync(User user);
-        Task<User?> LoginAsync(string email, string passwordHash);
+        public Task<User> GetUserAsync(string email);
+        Task RegisterAsync(RegisterDto user);
     }
 }

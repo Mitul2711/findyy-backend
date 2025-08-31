@@ -8,22 +8,10 @@ namespace findyy.Model.Auth
         public string FullName { get; set; } = default!;
         public string Email { get; set; } = default!;
         public string PasswordHash { get; set; } = default!;
-        public UserRole Role { get; set; } = UserRole.User;
+        public string Role { get; set; } = default!;
         public bool IsEmailVerified { get; set; }
-        public StatusDetails Status { get; set; } = StatusDetails.Pending;
+        public string Status { get; set; } = default!;
         public DateTime CreatedAt { get; set; }
-    }
-
-    public enum UserRole
-    {
-        User = 0,
-        BusinessOwner = 1
-    }
-
-    public enum StatusDetails
-    {
-        Pending = 0,
-        Verified = 1
     }
 
 }

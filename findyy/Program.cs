@@ -1,9 +1,12 @@
+using findyy.DTO.Auth;
+using findyy.Model.Auth;
 using findyy.Services.Auth.Interface;
-using LocalBizFinder.Business.Helpers;
 using LocalBizFinder.Business.Services;
 using LocalBizFinder.DataAccess.Interfaces;
 using LocalBizFinder.DataAccess.Repositories;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Win32;
 using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,9 +26,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Repository & Service with Interfaces
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-
-// Add JWT Helper
-builder.Services.AddSingleton<JwtHelper>();
+builder.Services.AddScoped<IPasswordHasher<RegisterDto>, PasswordHasher<RegisterDto>>();
 
 builder.Services.AddControllers();
 
