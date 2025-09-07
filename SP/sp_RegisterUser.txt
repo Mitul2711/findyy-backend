@@ -1,13 +1,49 @@
-CREATE OR ALTER PROCEDURE sp_RegisterUser
-    @Email NVARCHAR(100),
-    @PasswordHash NVARCHAR(200),
-    @FullName NVARCHAR(200),
-    @Role DATETIME = NULL
+ALTER PROCEDURE [dbo].[sp_RegisterUser]
+    @Action NVARCHAR(20),
+    @Id UNIQUEIDENTIFIER = NULL,
+    @FullName NVARCHAR(100) = NULL,
+    @Email NVARCHAR(100) = NULL,
+    @PasswordHash NVARCHAR(200) = NULL,
+    @Role NVARCHAR(50) = NULL,
+    @IsEmailVerified BIT = NULL,
+    @Status NVARCHAR(50) = NULL,
+    @VerificationToken NVARCHAR(200) = NULL,
+    @VerificationTokenExpiry DATETIME = NULL
 AS
 BEGIN
-    IF @CreatedAt IS NULL
-        SET @CreatedAt = GETDATE();
+    -- GET user by email
+    IF @Action = 'GET'
+    BEGIN
+        SELECT * FROM AppUsers WHERE Email = @Email;
+    END
 
-    INSERT INTO AppUsers (Email, PasswordHash, FullName, Role
-    VALUES (@Email, @PasswordHash, @FullName, @Role
+    -- POST register new user
+    IF @Action = 'POST'
+    BEGIN
+        INSERT INTO AppUsers (
+            Id, FullName, Email, PasswordHash, Role,
+            IsEmailVerified, Status, CreatedAt, EmailVerificationToken, VerificationTokenExpiry
+        )
+        VALUES (
+            @Id, @FullName, @Email, @PasswordHash, @Role,
+            0, 'Pending', GETDATE(), @VerificationToken, @VerificationTokenExpiry
+        );
+    END
+
+    -- GET user by token
+    IF @Action = 'GET_BY_TOKEN'
+    BEGIN
+        SELECT * FROM AppUsers WHERE EmailVerificationToken = @VerificationToken;
+    END
+
+    -- VERIFY email
+    IF @Action = 'VERIFY'
+    BEGIN
+        UPDATE AppUsers
+        SET IsEmailVerified = 1,
+            Status = 'Approved',
+            EmailVerificationToken = NULL,
+            VerificationTokenExpiry = NULL
+        WHERE EmailVerificationToken = @VerificationToken;
+    END
 END

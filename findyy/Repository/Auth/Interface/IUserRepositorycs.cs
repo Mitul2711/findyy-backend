@@ -7,5 +7,8 @@ namespace LocalBizFinder.DataAccess.Interfaces
     {
         public Task<User> GetUserAsync(string email);
         Task RegisterAsync(RegisterDto user);
+        public Task<User?> GetUserByTokenAsync(string token);
+        public Task VerifyUserAsync(string token);
+
     }
 }

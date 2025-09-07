@@ -12,6 +12,9 @@ namespace findyy.Model.Auth
         public bool IsEmailVerified { get; set; }
         public string Status { get; set; } = default!;
         public DateTime CreatedAt { get; set; }
+        public string? EmailVerificationToken { get; set; }
+        public DateTime? VerificationTokenExpiry { get; set; }
+
     }
 
 }
