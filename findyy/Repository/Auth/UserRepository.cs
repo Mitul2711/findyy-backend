@@ -30,14 +30,34 @@ namespace LocalBizFinder.DataAccess.Repositories
                 new SqlParameter("@PasswordHash", (object?)user.Password ?? DBNull.Value),
                 new SqlParameter("@Role", (object?)user.Role ?? DBNull.Value),
                 new SqlParameter("@IsEmailVerified", false),
-                new SqlParameter("@Status", "Pending")
+                new SqlParameter("@Status", "Pending"),
+                new SqlParameter("@VerificationToken", (object?)user.EmailVerificationToken ?? DBNull.Value),
+                new SqlParameter("@VerificationTokenExpiry", (object?)user.VerificationTokenExpiry ?? DBNull.Value)
             };
 
             await _db.Database.ExecuteSqlRawAsync(
-                "EXEC sp_RegisterUser @Action=@Action, @Id=@Id, @FullName=@FullName, @Email=@Email, @PasswordHash=@PasswordHash, @Role=@Role, @IsEmailVerified=@IsEmailVerified, @Status=@Status",
+                "EXEC sp_RegisterUser @Action=@Action, @Id=@Id, @FullName=@FullName, @Email=@Email, " +
+                "@PasswordHash=@PasswordHash, @Role=@Role, @IsEmailVerified=@IsEmailVerified, " +
+                "@Status=@Status, @VerificationToken=@VerificationToken, @VerificationTokenExpiry=@VerificationTokenExpiry",
                 parameters
             );
         }
+
+        public async Task<User?> GetUserByTokenAsync(string token)
+        {
+            var users = await _db.Users
+                .FromSqlInterpolated($"EXEC sp_RegisterUser @Action = {"GET_BY_TOKEN"}, @VerificationToken = {token}")
+                .ToListAsync();
+
+            return users.FirstOrDefault();
+        }
+
+        public async Task VerifyUserAsync(string token)
+        {
+            await _db.Database.ExecuteSqlInterpolatedAsync(
+                $"EXEC sp_RegisterUser @Action = {"VERIFY"}, @VerificationToken = {token}");
+        }
+
 
     }
 }

@@ -15,16 +15,19 @@ namespace LocalBizFinder.Business.Services
         private readonly IUserRepository _repo;
         private readonly IConfiguration _Configuration;
 
-        public IPasswordHasher<RegisterDto> _passwordHasher { get; }
+        public IPasswordHasher<UserDto> _passwordHasher { get; }
+        public IEmailService _emailService { get; }
 
-        public AuthService(IUserRepository repo, IPasswordHasher<RegisterDto> passwordHasher, IConfiguration configuration)
+        public AuthService(IUserRepository repo, IPasswordHasher<UserDto> passwordHasher, IConfiguration configuration,
+            IEmailService emailService)
         {
             _repo = repo;
             _passwordHasher = passwordHasher;
             _Configuration = configuration;
+            _emailService = emailService;
         }
 
-        public async Task<Response> RegisterAsync(RegisterDto dto)
+        public async Task<Response> RegisterAsync(UserDto dto)
         {
             var userExists = await _repo.GetUserAsync(dto.Email);
 
@@ -39,19 +42,31 @@ namespace LocalBizFinder.Business.Services
             }
 
             var hashPassword = _passwordHasher.HashPassword(dto, dto.Password);
+
+            // ✅ Generate token BEFORE saving user
+            var verificationToken = Guid.NewGuid().ToString();
+
             var userInfo = new RegisterDto()
             {
                 FullName = dto.FullName,
                 Email = dto.Email,
                 Password = hashPassword,
-                Role = dto.Role
+                Role = dto.Role,
+                EmailVerificationToken = verificationToken,
+                VerificationTokenExpiry = DateTime.UtcNow.AddHours(24)
             };
 
+            // ✅ Only save ONCE
             await _repo.RegisterAsync(userInfo);
+
+            var verificationLink = $"{_Configuration["AppUrl"]}/verify-email?token={verificationToken}";
+            await _emailService.SendEmailAsync(dto.Email, "Verify your email",
+                $"Hi {dto.FullName},<br/><br/>Please verify your account by clicking <a href='{verificationLink}'>here</a>.<br/><br/>Thanks!");
+
             return new Response
             {
                 Status = true,
-                Message = "User registered successfully",
+                Message = "User registered successfully. Please check your email for verification.",
                 Data = null
             };
         }
@@ -68,7 +83,7 @@ namespace LocalBizFinder.Business.Services
                     Data = null
                 };
             }
-            var userInfo = new RegisterDto()
+            var userInfo = new UserDto()
             {
                 Email = userExists.Email,
                 Password = userExists.PasswordHash,
@@ -117,6 +132,30 @@ namespace LocalBizFinder.Business.Services
                 };
             }
         }
+
+        public async Task<Response> VerifyEmailAsync(string token)
+        {
+            var user = await _repo.GetUserByTokenAsync(token);
+            if (user == null)
+            {
+                return new Response
+                {
+                    Status = false,
+                    Message = "Invalid or expired token",
+                    Data = null
+                };
+            }
+
+            await _repo.VerifyUserAsync(token);
+
+            return new Response
+            {
+                Status = true,
+                Message = "Email verified successfully!",
+                Data = null
+            };
+        }
+
 
     }
 }

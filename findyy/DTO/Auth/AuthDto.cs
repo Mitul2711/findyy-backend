@@ -9,6 +9,16 @@ namespace findyy.DTO.Auth
         public string Email { get; set; } = default!;
         public string Password { get; set; } = default!;
         public string Role { get; set; } = default!;
+        public string? EmailVerificationToken { get; set; }
+        public DateTime? VerificationTokenExpiry { get; set; }
+    }
+
+    public class UserDto
+    {
+        public string FullName { get; set; } = default!;
+        public string Email { get; set; } = default!;
+        public string Password { get; set; } = default!;
+        public string Role { get; set; } = default!;
     }
 
     public class LoginDto
