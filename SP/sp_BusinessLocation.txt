@@ -1,0 +1,57 @@
+CREATE OR ALTER PROCEDURE [dbo].[sp_BusinessLocation]
+    @Action NVARCHAR(20),
+    @Id BIGINT = NULL,
+    @BusinessId BIGINT = NULL,
+    @AddressLine1 NVARCHAR(200) = NULL,
+    @AddressLine2 NVARCHAR(200) = NULL,
+    @City NVARCHAR(100) = NULL,
+    @State NVARCHAR(100) = NULL,
+    @Country NVARCHAR(100) = NULL,
+    @PostalCode NVARCHAR(50) = NULL,
+    @Latitude FLOAT = NULL,
+    @Longitude FLOAT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @Action = 'GET'
+    BEGIN
+        SELECT * FROM BusinessLocation WHERE Id = @Id;
+    END
+
+    IF @Action = 'GET_BY_BUSINESS'
+    BEGIN
+        SELECT * FROM BusinessLocation WHERE BusinessId = @BusinessId;
+    END
+
+    IF @Action = 'POST'
+    BEGIN
+        INSERT INTO BusinessLocation (
+            BusinessId, AddressLine1, AddressLine2, City, State, Country, PostalCode, Latitude, Longitude
+        )
+        VALUES (
+            @BusinessId, @AddressLine1, @AddressLine2, @City, @State, @Country, @PostalCode, @Latitude, @Longitude
+        );
+
+        SET @Id = SCOPE_IDENTITY();
+    END
+
+    IF @Action = 'PUT'
+    BEGIN
+        UPDATE BusinessLocation
+        SET AddressLine1 = @AddressLine1,
+            AddressLine2 = @AddressLine2,
+            City = @City,
+            State = @State,
+            Country = @Country,
+            PostalCode = @PostalCode,
+            Latitude = @Latitude,
+            Longitude = @Longitude
+        WHERE Id = @Id;
+    END
+
+    IF @Action = 'DELETE'
+    BEGIN
+        DELETE FROM BusinessLocation WHERE Id = @Id;
+    END
+END

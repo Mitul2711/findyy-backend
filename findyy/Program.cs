@@ -27,6 +27,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IPasswordHasher<UserDto>, PasswordHasher<UserDto>>();
 
+
 // ===== JWT Authentication =====
 builder.Services.AddAuthentication(options =>
 {
