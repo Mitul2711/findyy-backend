@@ -1,0 +1,9 @@
+CREATE TYPE dbo.BusinessHourTableType AS TABLE
+(
+    Id BIGINT,
+    BusinessId BIGINT NOT NULL,   -- Make sure BusinessId is NOT NULL
+    DayOfWeek TINYINT NOT NULL,   -- Optional: enforce NOT NULL
+    OpenTime TIME NULL,
+    CloseTime TIME NULL,
+    IsClosed BIT NOT NULL
+);

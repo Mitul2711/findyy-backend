@@ -1,0 +1,68 @@
+USE [freedyy]
+GO
+/****** Object:  StoredProcedure [dbo].[GetBusinessProfileCompletion]    Script Date: 13-10-2025 15:04:12 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[GetBusinessProfileCompletion]
+    @BusinessId BIGINT
+AS
+BEGIN
+    DECLARE @completion INT = 0;
+
+    -- Section 1: Business info
+    DECLARE @businessCompleted BIT = 0;
+    IF EXISTS (
+        SELECT 1 
+        FROM Business
+        WHERE Id = @BusinessId
+          AND Name IS NOT NULL
+          AND Email IS NOT NULL
+    )
+        SET @businessCompleted = 1;
+
+    -- Section 2: Location
+    DECLARE @locationCompleted BIT = 0;
+    IF EXISTS (
+        SELECT 1 
+        FROM BusinessLocation
+        WHERE BusinessId = @BusinessId
+          AND AddressLine1 IS NOT NULL
+          AND City IS NOT NULL
+          AND State IS NOT NULL
+          AND Country IS NOT NULL
+    )
+        SET @locationCompleted = 1;
+
+    -- Section 3: Hours
+    DECLARE @hoursCompleted BIT = 0;
+    IF EXISTS (
+        SELECT 1 
+        FROM BusinessHour
+        WHERE BusinessId = @BusinessId
+    )
+        SET @hoursCompleted = 1;
+
+    -- Section 4: Verification request
+    DECLARE @verificationCompleted BIT = 0;
+    IF EXISTS (
+        SELECT 1
+        FROM Business
+        WHERE Id = @BusinessId
+          AND Status IN (2,1) -- Pending or Active
+    )
+        SET @verificationCompleted = 1;
+
+    -- Calculate percentage (cast BIT to INT)
+    SET @completion = 
+        (CAST(@businessCompleted AS INT) 
+       + CAST(@locationCompleted AS INT) 
+       + CAST(@hoursCompleted AS INT) 
+       + CAST(@verificationCompleted AS INT)) * 25;
+
+    -- Return
+    SELECT 
+        @completion AS CompletionPercentage,
+        (SELECT IsVerified FROM Business WHERE Id = @BusinessId) AS IsVerified;
+END

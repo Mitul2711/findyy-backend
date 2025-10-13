@@ -1,0 +1,90 @@
+CREATE OR ALTER PROCEDURE [dbo].[sp_BusinessHour]
+    @Action NVARCHAR(20),
+    @Id BIGINT = NULL,
+    @BusinessId BIGINT = NULL,
+    @DayOfWeek TINYINT = NULL,
+    @OpenTime TIME = NULL,
+    @CloseTime TIME = NULL,
+    @IsClosed BIT = NULL,
+    @BusinessHours dbo.BusinessHourTableType READONLY  -- new TVP parameter
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -------------------------------------------------------------
+    -- 1️⃣  Get by Id
+    -------------------------------------------------------------
+    IF @Action = 'GET'
+    BEGIN
+        SELECT * FROM BusinessHour WHERE Id = @Id;
+        RETURN;
+    END
+
+    -------------------------------------------------------------
+    -- 2️⃣  Get by Business
+    -------------------------------------------------------------
+    IF @Action = 'GET_BY_BUSINESS'
+    BEGIN
+        SELECT * FROM BusinessHour WHERE BusinessId = @BusinessId ORDER BY DayOfWeek;
+        RETURN;
+    END
+
+    -------------------------------------------------------------
+    -- 3️⃣  Insert Single Record
+    -------------------------------------------------------------
+    IF @Action = 'POST'
+    BEGIN
+        INSERT INTO BusinessHour (BusinessId, DayOfWeek, OpenTime, CloseTime, IsClosed)
+        VALUES (@BusinessId, @DayOfWeek, @OpenTime, @CloseTime, ISNULL(@IsClosed, 0));
+
+        SET @Id = SCOPE_IDENTITY();
+        RETURN;
+    END
+
+    -------------------------------------------------------------
+    -- 4️⃣  Update Single Record
+    -------------------------------------------------------------
+    IF @Action = 'PUT'
+    BEGIN
+        UPDATE BusinessHour
+        SET DayOfWeek = @DayOfWeek,
+            OpenTime = @OpenTime,
+            CloseTime = @CloseTime,
+            IsClosed = @IsClosed
+        WHERE Id = @Id;
+        RETURN;
+    END
+
+    -------------------------------------------------------------
+    -- 5️⃣  Delete Single Record
+    -------------------------------------------------------------
+    IF @Action = 'DELETE'
+    BEGIN
+        DELETE FROM BusinessHour WHERE Id = @Id;
+        RETURN;
+    END
+
+    -------------------------------------------------------------
+    -- 6️⃣  Bulk Insert/Update using Table-Valued Parameter
+    -------------------------------------------------------------
+    IF @Action = 'BULK_SAVE'
+    BEGIN
+        MERGE INTO BusinessHour AS target
+        USING @BusinessHours AS source
+        ON target.Id = source.Id
+
+        WHEN MATCHED THEN
+            UPDATE SET
+                target.BusinessId = source.BusinessId,
+                target.DayOfWeek = source.DayOfWeek,
+                target.OpenTime = source.OpenTime,
+                target.CloseTime = source.CloseTime,
+                target.IsClosed = source.IsClosed
+
+        WHEN NOT MATCHED BY TARGET THEN
+            INSERT (BusinessId, DayOfWeek, OpenTime, CloseTime, IsClosed)
+            VALUES (source.BusinessId, source.DayOfWeek, source.OpenTime, source.CloseTime, source.IsClosed);
+
+        RETURN;
+    END
+END
