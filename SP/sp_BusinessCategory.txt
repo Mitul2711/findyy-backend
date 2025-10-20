@@ -1,0 +1,69 @@
+CREATE OR ALTER PROCEDURE [dbo].[sp_BusinessCategory]
+    @Action NVARCHAR(20),
+    @Id BIGINT = NULL,
+    @Name NVARCHAR(200) = NULL,
+    @Description NVARCHAR(MAX) = NULL,
+    @IsActive BIT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @Action = 'GET'
+    BEGIN
+        SELECT * FROM BusinessCategory WHERE Id = @Id;
+    END
+
+    IF @Action = 'GET_ALL'
+    BEGIN
+        SELECT * FROM BusinessCategory ORDER BY Name;
+    END
+
+    IF @Action = 'POST'
+    BEGIN
+        INSERT INTO BusinessCategory (Name, Description, IsActive, CreatedAt, UpdatedAt)
+        VALUES (@Name, @Description, ISNULL(@IsActive, 1), GETDATE(), NULL);
+
+        SET @Id = SCOPE_IDENTITY();
+    END
+
+    IF @Action = 'PUT'
+    BEGIN
+        UPDATE BusinessCategory
+        SET Name = @Name,
+            Description = @Description,
+            IsActive = @IsActive,
+            UpdatedAt = GETDATE()
+        WHERE Id = @Id;
+    END
+
+    IF @Action = 'DELETE'
+    BEGIN
+        DELETE FROM BusinessCategory WHERE Id = @Id;
+    END
+END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  INSERT INTO [freedyy].[dbo].[BusinessCategory]
+    ([Name], [Description], [IsActive], [CreatedAt], [UpdatedAt])
+VALUES
+    ('Retail', 'Businesses engaged in selling consumer goods directly to customers.', 1, GETDATE(), GETDATE()),
+    ('Technology', 'Companies providing IT, software, or hardware solutions.', 1, GETDATE(), GETDATE()),
+    ('Healthcare', 'Clinics, hospitals, and medical service providers.', 1, GETDATE(), GETDATE()),
+    ('Hospitality', 'Hotels, restaurants, and travel service providers.', 1, GETDATE(), GETDATE()),
+    ('Education', 'Institutions offering academic or professional learning programs.', 1, GETDATE(), GETDATE()),
+    ('Construction', 'Firms involved in building and infrastructure development.', 1, GETDATE(), GETDATE()),
+    ('Finance', 'Banks, insurance, and financial consulting services.', 1, GETDATE(), GETDATE());

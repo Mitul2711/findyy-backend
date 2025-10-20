@@ -3,6 +3,7 @@ using findyy.Model.BusinessRegister;
 using findyy.Repository.BusinessRegister.Interface;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace findyy.Repository.BusinessRegister
 {
@@ -12,19 +13,27 @@ namespace findyy.Repository.BusinessRegister
         public BusinessRepository(AppDbContext db) => _db = db;
 
         // ------------------- Business -------------------
-        public async Task<Business?> GetBusinessAsync(long id)
+        public async Task<Business?> GetBusinessAsync(Guid id)
         {
-            var businesses = await _db.Business
-                .FromSqlInterpolated($"EXEC sp_Business @Action = {"GET"}, @Id = {id}")
-                .ToListAsync();
+            var business = await _db.Business
+                .Include(b => b.Location)
+                .Include(b => b.Hours)
+                .Include(b => b.BusinessCategory) // 🔹 Include category relation
+                .Where(b => b.OwnerUserId == id)
+                .OrderByDescending(b => b.CreatedAt)
+                .FirstOrDefaultAsync();
 
-            return businesses.FirstOrDefault();
+            return business;
         }
 
         public async Task<List<Business>> GetAllBusinessesAsync()
         {
             var businesses = await _db.Business
-                .FromSqlInterpolated($"EXEC sp_Business @Action = {"GET_ALL"}")
+                .Include(b => b.Location)
+                .Include(b => b.Owner)
+                .Include(b => b.Hours)
+                .Include(b => b.BusinessCategory) // 🔹 Include category relation
+                .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
 
             return businesses;
@@ -39,24 +48,23 @@ namespace findyy.Repository.BusinessRegister
                 new SqlParameter("@Name", dto.Name),
                 new SqlParameter("@Description", (object?)dto.Description ?? DBNull.Value),
                 new SqlParameter("@Website", (object?)dto.Website ?? DBNull.Value),
-                new SqlParameter("@Category", (object?)dto.Category ?? DBNull.Value),
+
+                // 🔹 Replaced old @Category with @BusinessCategoryId
+                new SqlParameter("@BusinessCategoryId", (object?)dto.BusinessCategoryId ?? DBNull.Value),
+
                 new SqlParameter("@Phone", (object?)dto.Phone ?? DBNull.Value),
                 new SqlParameter("@Email", (object?)dto.Email ?? DBNull.Value),
-                new SqlParameter("@IsVerified", 0),
+                new SqlParameter("@IsVerified", SqlDbType.Bit) { Value = false },
                 new SqlParameter("@Status", 2),
-                new SqlParameter("@AvgRating", dto.AvgRating),
-                new SqlParameter("@ReviewCount", dto.ReviewCount)
             };
 
             await _db.Database.ExecuteSqlRawAsync(
                 "EXEC sp_Business @Action=@Action, @OwnerUserId=@OwnerUserId, @Name=@Name, " +
-                "@Description=@Description, @Website=@Website, @Category=@Category, " +
-                "@Phone=@Phone, @Email=@Email, @IsVerified=@IsVerified, @Status=@Status, " +
-                "@AvgRating=@AvgRating, @ReviewCount=@ReviewCount",
+                "@Description=@Description, @Website=@Website, @BusinessCategoryId=@BusinessCategoryId, " +
+                "@Phone=@Phone, @Email=@Email, @IsVerified=@IsVerified, @Status=@Status",
                 parameters
             );
 
-            // Retrieve newly created business Id
             var created = await GetAllBusinessesAsync();
             return created.Last().Id;
         }
@@ -70,7 +78,10 @@ namespace findyy.Repository.BusinessRegister
                 new SqlParameter("@Name", dto.Name),
                 new SqlParameter("@Description", (object?)dto.Description ?? DBNull.Value),
                 new SqlParameter("@Website", (object?)dto.Website ?? DBNull.Value),
-                new SqlParameter("@Category", (object?)dto.Category ?? DBNull.Value),
+
+                // 🔹 Replaced old @Category with @BusinessCategoryId
+                new SqlParameter("@BusinessCategoryId", (object?)dto.BusinessCategoryId ?? DBNull.Value),
+
                 new SqlParameter("@Phone", (object?)dto.Phone ?? DBNull.Value),
                 new SqlParameter("@Email", (object?)dto.Email ?? DBNull.Value),
                 new SqlParameter("@IsVerified", dto.IsVerified),
@@ -81,8 +92,9 @@ namespace findyy.Repository.BusinessRegister
 
             await _db.Database.ExecuteSqlRawAsync(
                 "EXEC sp_Business @Action=@Action, @Id=@Id, @Name=@Name, @Description=@Description, " +
-                "@Website=@Website, @Category=@Category, @Phone=@Phone, @Email=@Email, " +
-                "@IsVerified=@IsVerified, @Status=@Status, @AvgRating=@AvgRating, @ReviewCount=@ReviewCount",
+                "@Website=@Website, @BusinessCategoryId=@BusinessCategoryId, " +
+                "@Phone=@Phone, @Email=@Email, @IsVerified=@IsVerified, @Status=@Status, " +
+                "@AvgRating=@AvgRating, @ReviewCount=@ReviewCount",
                 parameters
             );
         }
@@ -139,24 +151,63 @@ namespace findyy.Repository.BusinessRegister
             return hours;
         }
 
-        public async Task CreateOrUpdateBusinessHourAsync(BusinessHourDto dto, string action)
+        public async Task CreateOrUpdateBusinessHourAsync(List<BusinessHourDto> dtos, string action)
         {
+            var table = new DataTable();
+            table.Columns.Add("Id", typeof(long));
+            table.Columns.Add("BusinessId", typeof(long));
+            table.Columns.Add("DayOfWeek", typeof(byte));
+            table.Columns.Add("OpenTime", typeof(TimeSpan));
+            table.Columns.Add("CloseTime", typeof(TimeSpan));
+            table.Columns.Add("IsClosed", typeof(bool));
+
+            foreach (var dto in dtos)
+            {
+                table.Rows.Add(dto.Id, dto.BusinessId, dto.DayOfWeek, dto.OpenTime, dto.CloseTime, dto.IsClosed);
+            }
+
             var parameters = new[]
             {
-                new SqlParameter("@Action", action),
-                new SqlParameter("@Id", dto.Id),
-                new SqlParameter("@BusinessId", dto.BusinessId),
-                new SqlParameter("@DayOfWeek", dto.DayOfWeek),
-                new SqlParameter("@OpenTime", (object?)dto.OpenTime ?? DBNull.Value),
-                new SqlParameter("@CloseTime", (object?)dto.CloseTime ?? DBNull.Value),
-                new SqlParameter("@IsClosed", dto.IsClosed)
+                new SqlParameter("@BusinessHours", table)
+                {
+                    TypeName = "dbo.BusinessHourTableType",
+                    SqlDbType = SqlDbType.Structured
+                },
+                new SqlParameter("@Action", action)
             };
 
             await _db.Database.ExecuteSqlRawAsync(
-                "EXEC sp_BusinessHour @Action=@Action, @Id=@Id, @BusinessId=@BusinessId, " +
-                "@DayOfWeek=@DayOfWeek, @OpenTime=@OpenTime, @CloseTime=@CloseTime, @IsClosed=@IsClosed",
+                "EXEC sp_BusinessHour @BusinessHours=@BusinessHours, @Action = @Action",
                 parameters
             );
+        }
+
+        // ------------------- Business Verify -------------------
+        public async Task ReviewBusinessAsync(long businessId, bool isVerified, byte status)
+        {
+            var parameters = new[]
+            {
+                new SqlParameter("@Action", "REVIEW"),
+                new SqlParameter("@Id", businessId),
+                new SqlParameter("@IsVerified", isVerified),
+                new SqlParameter("@Status", status)
+            };
+
+            await _db.Database.ExecuteSqlRawAsync(
+                "EXEC sp_Business @Action=@Action, @Id=@Id, @IsVerified=@IsVerified, @Status=@Status",
+                parameters
+            );
+        }
+
+        // ------------------- Business Category -------------------
+        public async Task<List<BusinessCategory>> GetBusinessCategoriesAsync()
+        {
+            var categories = await _db.BusinessCategory
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+
+            return categories;
         }
     }
 }

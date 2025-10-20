@@ -21,11 +21,18 @@ namespace LocalBizFinder.DataAccess.Repositories
         }
         public async Task RegisterAsync(RegisterDto user)
         {
+            if (user.BusinessCategoryId == 0)
+                user.BusinessCategoryId = null;
+
             var parameters = new[]
             {
                 new SqlParameter("@Action", "POST"),
                 new SqlParameter("@Id", Guid.NewGuid()),
-                new SqlParameter("@FullName", (object?)user.FullName ?? DBNull.Value),
+                new SqlParameter("@FirstName", (object?)user.FirstName ?? DBNull.Value),
+                new SqlParameter("@LastName", (object?)user.LastName ?? DBNull.Value),
+                new SqlParameter("@BusinessName", (object?)user.BusinessName ?? DBNull.Value),
+                new SqlParameter("@BusinessCategoryId", (object?)user.BusinessCategoryId ?? DBNull.Value),
+                new SqlParameter("@City", (object?)user.City ?? DBNull.Value),
                 new SqlParameter("@Email", (object?)user.Email ?? DBNull.Value),
                 new SqlParameter("@PasswordHash", (object?)user.Password ?? DBNull.Value),
                 new SqlParameter("@Role", (object?)user.Role ?? DBNull.Value),
@@ -36,8 +43,9 @@ namespace LocalBizFinder.DataAccess.Repositories
             };
 
             await _db.Database.ExecuteSqlRawAsync(
-                "EXEC sp_RegisterUser @Action=@Action, @Id=@Id, @FullName=@FullName, @Email=@Email, " +
+                "EXEC sp_RegisterUser @Action=@Action, @Id=@Id, @FirstName=@FirstName, @City=@City, @Email=@Email, " +
                 "@PasswordHash=@PasswordHash, @Role=@Role, @IsEmailVerified=@IsEmailVerified, " +
+                "@LastName=@LastName, @BusinessName=@BusinessName, @BusinessCategoryId=@BusinessCategoryId, " +
                 "@Status=@Status, @VerificationToken=@VerificationToken, @VerificationTokenExpiry=@VerificationTokenExpiry",
                 parameters
             );

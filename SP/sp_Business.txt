@@ -5,7 +5,7 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_Business]
     @Name NVARCHAR(200) = NULL,
     @Description NVARCHAR(MAX) = NULL,
     @Website NVARCHAR(200) = NULL,
-    @Category NVARCHAR(100) = NULL,
+    @BusinessCategoryId BIGINT = NULL, -- 🔹 Replaces @Category
     @Phone NVARCHAR(50) = NULL,
     @Email NVARCHAR(100) = NULL,
     @IsVerified BIT = NULL,
@@ -20,7 +20,9 @@ BEGIN
 
     IF @Action = 'GET'
     BEGIN
-        SELECT * FROM Business WHERE Id = @Id;
+        SELECT * 
+        FROM Business
+        WHERE OwnerUserId = @OwnerUserId;
     END
 
     IF @Action = 'GET_ALL'
@@ -31,12 +33,12 @@ BEGIN
     IF @Action = 'POST'
     BEGIN
         INSERT INTO Business (
-            OwnerUserId, Name, Description, Website, Category,
+            OwnerUserId, Name, Description, Website, BusinessCategoryId,
             Phone, Email, IsVerified, Status, AvgRating, ReviewCount,
             CreatedAt, UpdatedAt
         )
         VALUES (
-            @OwnerUserId, @Name, @Description, @Website, @Category,
+            @OwnerUserId, @Name, @Description, @Website, @BusinessCategoryId,
             @Phone, @Email, ISNULL(@IsVerified,0), ISNULL(@Status,1),
             ISNULL(@AvgRating,0), ISNULL(@ReviewCount,0),
             GETDATE(), NULL
@@ -51,7 +53,7 @@ BEGIN
         SET Name = @Name,
             Description = @Description,
             Website = @Website,
-            Category = @Category,
+            BusinessCategoryId = @BusinessCategoryId,  -- 🔹 Updated
             Phone = @Phone,
             Email = @Email,
             IsVerified = @IsVerified,
@@ -65,5 +67,14 @@ BEGIN
     IF @Action = 'DELETE'
     BEGIN
         DELETE FROM Business WHERE Id = @Id;
+    END
+
+    IF @Action = 'REVIEW'
+    BEGIN
+        UPDATE Business
+        SET IsVerified = ISNULL(@IsVerified, IsVerified),
+            Status = ISNULL(@Status, Status),
+            UpdatedAt = GETDATE()
+        WHERE Id = @Id;
     END
 END

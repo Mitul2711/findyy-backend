@@ -1,5 +1,7 @@
 ﻿using findyy.DTO.Auth;
+using findyy.Model.BusinessRegister;
 using findyy.Model.Response;
+using findyy.Repository.BusinessRegister.Interface;
 using findyy.Services.Auth.Interface;
 using LocalBizFinder.DataAccess.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -13,15 +15,17 @@ namespace LocalBizFinder.Business.Services
     public class AuthService : IAuthService
     {
         private readonly IUserRepository _repo;
+        private readonly IBusinessRepository _businessrepo;
         private readonly IConfiguration _Configuration;
 
         public IPasswordHasher<UserDto> _passwordHasher { get; }
         public IEmailService _emailService { get; }
 
-        public AuthService(IUserRepository repo, IPasswordHasher<UserDto> passwordHasher, IConfiguration configuration,
+        public AuthService(IUserRepository repo, IBusinessRepository businessrepo, IPasswordHasher<UserDto> passwordHasher, IConfiguration configuration,
             IEmailService emailService)
         {
             _repo = repo;
+            _businessrepo = businessrepo;
             _passwordHasher = passwordHasher;
             _Configuration = configuration;
             _emailService = emailService;
@@ -48,7 +52,10 @@ namespace LocalBizFinder.Business.Services
 
             var userInfo = new RegisterDto()
             {
-                FullName = dto.FullName,
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                BusinessCategoryId = dto.BusinessCategoryId,
+                BusinessName = dto.BusinessName,
                 Email = dto.Email,
                 Password = hashPassword,
                 Role = dto.Role,
@@ -59,9 +66,9 @@ namespace LocalBizFinder.Business.Services
             // ✅ Only save ONCE
             await _repo.RegisterAsync(userInfo);
 
-            var verificationLink = $"{_Configuration["AppUrl"]}/verify-email?token={verificationToken}";
+            var verificationLink = $"{_Configuration["AppUrl"]}/verifyemail?token={verificationToken}&email={userInfo.Email}";
             await _emailService.SendEmailAsync(dto.Email, "Verify your email",
-                $"Hi {dto.FullName},<br/><br/>Please verify your account by clicking <a href='{verificationLink}'>here</a>.<br/><br/>Thanks!");
+                $"Hi {dto.FirstName} {dto.LastName},<br/><br/>Please verify your account by clicking <a href='{verificationLink}'>here</a>.<br/><br/>Thanks!");
 
             return new Response
             {
@@ -87,7 +94,8 @@ namespace LocalBizFinder.Business.Services
             {
                 Email = userExists.Email,
                 Password = userExists.PasswordHash,
-                FullName = userExists.FullName,
+                FirstName = userExists.FirstName,
+                LastName = userExists.LastName,
                 Role = userExists.Role
             };
             var matchPassword = _passwordHasher.VerifyHashedPassword(userInfo, userExists.PasswordHash, dto.Password);
@@ -96,15 +104,40 @@ namespace LocalBizFinder.Business.Services
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var key = Encoding.UTF8.GetBytes(_Configuration["Jwt:Key"]);
 
+                long? businessId = null;
+
+                if (userExists.Role.Equals("Business", StringComparison.OrdinalIgnoreCase))
+                {
+                    var business = await _businessrepo.GetBusinessAsync(userExists.Id);
+
+                    if (business != null)
+                    {
+                        businessId = business.Id;
+                    }
+                }
+
+
+                var claims = new List<Claim>
+                {
+                    new Claim("role", userExists.Role),
+                        new Claim("email", userExists.Email),
+                        new Claim("businessName", userExists.BusinessName),
+                        new Claim("businessCategory", userExists.BusinessCategoryId.ToString()),
+                        new Claim("email", userExists.Email),
+                        new Claim("first_name", userExists.FirstName),
+                        new Claim("last_name", userExists.LastName),
+                        new Claim("UserId", userExists.Id.ToString(),  ClaimValueTypes.Integer),
+                };
+
+                if (businessId.HasValue)
+                {
+                    claims.Add(new Claim("BusinessId", businessId.Value.ToString(), ClaimValueTypes.Integer));
+                }
+
+
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
-                    Subject = new ClaimsIdentity(new[]
-                    {
-                new Claim("role", userExists.Role),
-                new Claim("email", userExists.Email),
-                new Claim("full_name", userExists.FullName),
-                new Claim("UserId", userExists.Id.ToString(),  ClaimValueTypes.Integer),
-            }),
+                    Subject = new ClaimsIdentity(claims),
                     Expires = DateTime.UtcNow.AddDays(1),
                     Issuer = _Configuration["Jwt:Issuer"],
                     Audience = _Configuration["Jwt:Audience"],

@@ -2,6 +2,7 @@
 using findyy.Services.BusinessRegister.Interface;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using findyy.Model.Response;
 
 namespace findyy.Controllers
 {
@@ -18,71 +19,77 @@ namespace findyy.Controllers
 
         // ------------------- Business Endpoints -------------------
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetBusiness(long id)
+        public async Task<IActionResult> GetBusiness(Guid id)
         {
-            var business = await _service.GetBusinessAsync(id);
-            if (business == null) return NotFound();
-            return Ok(business);
+            var response = await _service.GetBusinessAsync(id);
+            return Ok(response);
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllBusinesses()
         {
-            var businesses = await _service.GetAllBusinessesAsync();
-            return Ok(businesses);
+            var response = await _service.GetAllBusinessesAsync();
+            return Ok(response);
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateBusiness([FromBody] BusinessDto dto)
         {
-            var id = await _service.CreateBusinessAsync(dto);
-            return Ok(new { BusinessId = id });
+            var response = await _service.CreateBusinessAsync(dto);
+            return Ok(response);
         }
 
-        [HttpPut("{id}")]
+        [HttpPost("{id}")]
         public async Task<IActionResult> UpdateBusiness(long id, [FromBody] BusinessUpdateDto dto)
         {
             dto.Id = id;
-            await _service.UpdateBusinessAsync(dto);
-            return NoContent();
+            var response = await _service.UpdateBusinessAsync(dto);
+            return Ok(response);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBusiness(long id)
         {
-            await _service.DeleteBusinessAsync(id);
-            return NoContent();
+            var response = await _service.DeleteBusinessAsync(id);
+            return Ok(response);
         }
 
         // ------------------- Location Endpoints -------------------
         [HttpGet("location/{id}")]
         public async Task<IActionResult> GetBusinessLocation(long id)
         {
-            var location = await _service.GetBusinessLocationAsync(id);
-            if (location == null) return NotFound();
-            return Ok(location);
+            var response = await _service.GetBusinessLocationAsync(id);
+            return Ok(response);
         }
 
         [HttpPost("location")]
-        public async Task<IActionResult> CreateOrUpdateLocation([FromBody] BusinessLocationDto dto, [FromQuery] string action = "POST")
+        public async Task<IActionResult> CreateOrUpdateLocation([FromBody] BusinessLocationDto dto)
         {
-            await _service.CreateOrUpdateLocationAsync(dto, action);
-            return Ok();
+            var response = await _service.CreateOrUpdateLocationAsync(dto);
+            return Ok(response);
         }
-
+            
         // ------------------- Hours Endpoints -------------------
-        [HttpGet("{businessId}/hours")]
+        [HttpGet("hours/{businessId}")]
         public async Task<IActionResult> GetBusinessHours(long businessId)
         {
-            var hours = await _service.GetBusinessHoursAsync(businessId);
-            return Ok(hours);
+            var response = await _service.GetBusinessHoursAsync(businessId);
+            return Ok(response);
         }
 
         [HttpPost("hours")]
-        public async Task<IActionResult> CreateOrUpdateHours([FromBody] BusinessHourDto dto, [FromQuery] string action = "POST")
+        public async Task<IActionResult> CreateOrUpdateHours([FromBody] List<BusinessHourDto> dtos)
         {
-            await _service.CreateOrUpdateBusinessHourAsync(dto, action);
-            return Ok();
+            var response = await _service.CreateOrUpdateBusinessHourAsync(dtos);
+            return Ok(response);
         }
+
+        [HttpPost("review/{id}")]
+        public async Task<IActionResult> ReviewBusiness(long id, [FromBody] ReviewBusinessDto dto)
+        {
+            var response = await _service.ReviewBusinessAsync(id, dto.IsVerified, dto.Status);
+            return Ok(response);
+        }
+
     }
 }

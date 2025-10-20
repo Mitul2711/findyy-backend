@@ -29,7 +29,7 @@ public class AuthController : ControllerBase
     {
         var response = await _authService.VerifyEmailAsync(token);
         if (!response.Status)
-            return BadRequest(response);
+            return Ok(response);
 
         return Ok(response);
     }

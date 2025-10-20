@@ -1,6 +1,17 @@
 using findyy.DTO.Auth;
+using findyy.Repository.BusinessCategoryRepo.Interface;
+using findyy.Repository.BusinessDash;
+using findyy.Repository.BusinessDash.Interface;
+using findyy.Repository.BusinessRegister;
+using findyy.Repository.BusinessRegister.Interface;
+using findyy.Services.Admin;
+using findyy.Services.Admin.Interface;
 using findyy.Services.Auth;
 using findyy.Services.Auth.Interface;
+using findyy.Services.BusinessDash;
+using findyy.Services.BusinessDash.Interface;
+using findyy.Services.BusinessRegister;
+using findyy.Services.BusinessRegister.Interface;
 using LocalBizFinder.Business.Services;
 using LocalBizFinder.DataAccess.Interfaces;
 using LocalBizFinder.DataAccess.Repositories;
@@ -13,7 +24,13 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.WriteIndented = true;
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -25,8 +42,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IBusinessService, BusinessService>();
+builder.Services.AddScoped<IBusinessRepository, BusinessRepository>();
+
+builder.Services.AddScoped<IBusinessDashRepository, BusinessDashRepository>();
+builder.Services.AddScoped<IBusinessDashService, BusinessDashService>();
 builder.Services.AddScoped<IPasswordHasher<UserDto>, PasswordHasher<UserDto>>();
 
+builder.Services.AddScoped<IBusinessCategoryRepository, BusinessCategoryRepository>();
+builder.Services.AddScoped<IBusinessCategoryService, BusinessCategoryService>();
+
+builder.Services.AddScoped<IAdminNotificationService, AdminNotificationService>();
 
 // ===== JWT Authentication =====
 builder.Services.AddAuthentication(options =>
@@ -56,7 +82,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular",
-        policy => policy.WithOrigins(builder.Configuration["AppUrl"]) // e.g., http://localhost:4200
+        policy => policy.WithOrigins(builder.Configuration["AppUrl"])
                         .AllowAnyHeader()
                         .AllowAnyMethod());
 });

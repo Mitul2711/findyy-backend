@@ -5,7 +5,7 @@ namespace findyy.Repository.BusinessRegister.Interface
 {
     public interface IBusinessRepository
     {
-        Task<Business?> GetBusinessAsync(long id);
+        Task<Business?> GetBusinessAsync(Guid id);
         Task<List<Business>> GetAllBusinessesAsync();
         Task<long> CreateBusinessAsync(BusinessDto dto);
         Task UpdateBusinessAsync(BusinessUpdateDto dto);
@@ -17,6 +17,9 @@ namespace findyy.Repository.BusinessRegister.Interface
 
         // ------------------- Business Hours -------------------
         Task<List<BusinessHour>> GetBusinessHoursAsync(long businessId);
-        Task CreateOrUpdateBusinessHourAsync(BusinessHourDto dto, string action);
+        Task CreateOrUpdateBusinessHourAsync(List<BusinessHourDto> dto, string action);
+
+        Task ReviewBusinessAsync(long businessId, bool isVerified, byte status);
+
     }
 }

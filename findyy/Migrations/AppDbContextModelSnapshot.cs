@@ -27,6 +27,15 @@ namespace findyy.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<long?>("BusinessCategoryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("BusinessName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("City")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -37,15 +46,22 @@ namespace findyy.Migrations
                     b.Property<string>("EmailVerificationToken")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FullName")
+                    b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsEmailVerified")
                         .HasColumnType("bit");
 
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Phone")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Role")
@@ -61,6 +77,8 @@ namespace findyy.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BusinessCategoryId");
+
                     b.ToTable("AppUsers", (string)null);
                 });
 
@@ -75,8 +93,8 @@ namespace findyy.Migrations
                     b.Property<decimal>("AvgRating")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("Category")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<long?>("BusinessCategoryId")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -114,7 +132,42 @@ namespace findyy.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BusinessCategoryId");
+
+                    b.HasIndex("OwnerUserId");
+
                     b.ToTable("Business");
+                });
+
+            modelBuilder.Entity("findyy.Model.BusinessRegister.BusinessCategory", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BusinessCategory");
                 });
 
             modelBuilder.Entity("findyy.Model.BusinessRegister.BusinessHour", b =>
@@ -194,22 +247,52 @@ namespace findyy.Migrations
                     b.ToTable("BusinessLocation");
                 });
 
+            modelBuilder.Entity("findyy.Model.Auth.User", b =>
+                {
+                    b.HasOne("findyy.Model.BusinessRegister.BusinessCategory", "BusinessCategory")
+                        .WithMany()
+                        .HasForeignKey("BusinessCategoryId");
+
+                    b.Navigation("BusinessCategory");
+                });
+
+            modelBuilder.Entity("findyy.Model.BusinessRegister.Business", b =>
+                {
+                    b.HasOne("findyy.Model.BusinessRegister.BusinessCategory", "BusinessCategory")
+                        .WithMany("Businesses")
+                        .HasForeignKey("BusinessCategoryId");
+
+                    b.HasOne("findyy.Model.Auth.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BusinessCategory");
+
+                    b.Navigation("Owner");
+                });
+
             modelBuilder.Entity("findyy.Model.BusinessRegister.BusinessHour", b =>
                 {
-                    b.HasOne("findyy.Model.BusinessRegister.Business", null)
+                    b.HasOne("findyy.Model.BusinessRegister.Business", "Business")
                         .WithMany("Hours")
                         .HasForeignKey("BusinessId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Business");
                 });
 
             modelBuilder.Entity("findyy.Model.BusinessRegister.BusinessLocation", b =>
                 {
-                    b.HasOne("findyy.Model.BusinessRegister.Business", null)
+                    b.HasOne("findyy.Model.BusinessRegister.Business", "Business")
                         .WithOne("Location")
                         .HasForeignKey("findyy.Model.BusinessRegister.BusinessLocation", "BusinessId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Business");
                 });
 
             modelBuilder.Entity("findyy.Model.BusinessRegister.Business", b =>
@@ -217,6 +300,11 @@ namespace findyy.Migrations
                     b.Navigation("Hours");
 
                     b.Navigation("Location");
+                });
+
+            modelBuilder.Entity("findyy.Model.BusinessRegister.BusinessCategory", b =>
+                {
+                    b.Navigation("Businesses");
                 });
 #pragma warning restore 612, 618
         }
