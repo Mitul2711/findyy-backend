@@ -339,6 +339,122 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "findyy.Controllers.BusinessPhotosController",
+    "Method": "Add",
+    "RelativePath": "api/businesses/{businessId}/photos",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "businessId",
+        "Type": "System.Int64",
+        "IsRequired": true
+      },
+      {
+        "Name": "photo",
+        "Type": "findyy.Model.BusinessRegister.BusinessPhoto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "findyy.Controllers.BusinessPhotosController",
+    "Method": "GetAll",
+    "RelativePath": "api/businesses/{businessId}/photos",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "businessId",
+        "Type": "System.Int64",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "findyy.Controllers.BusinessPhotosController",
+    "Method": "Delete",
+    "RelativePath": "api/businesses/{businessId}/photos/{photoId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "businessId",
+        "Type": "System.Int64",
+        "IsRequired": true
+      },
+      {
+        "Name": "photoId",
+        "Type": "System.Int64",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "findyy.Controllers.BusinessPhotosController",
+    "Method": "GetPhoto",
+    "RelativePath": "api/businesses/{businessId}/photos/{photoId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "businessId",
+        "Type": "System.Int64",
+        "IsRequired": true
+      },
+      {
+        "Name": "photoId",
+        "Type": "System.Int64",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "findyy.Controllers.BusinessPhotosController",
+    "Method": "SetMain",
+    "RelativePath": "api/businesses/{businessId}/photos/{photoId}/set-main",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "businessId",
+        "Type": "System.Int64",
+        "IsRequired": true
+      },
+      {
+        "Name": "photoId",
+        "Type": "System.Int64",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "findyy.Controllers.BusinessPhotosController",
+    "Method": "GetMain",
+    "RelativePath": "api/businesses/{businessId}/photos/main",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "businessId",
+        "Type": "System.Int64",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "findyy.Controllers.BusinessReviewController",
     "Method": "CreateReview",
     "RelativePath": "api/BusinessReview",

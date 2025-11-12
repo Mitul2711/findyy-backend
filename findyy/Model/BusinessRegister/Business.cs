@@ -106,4 +106,33 @@ namespace findyy.Model.BusinessRegister
         [JsonIgnore]
         public virtual ICollection<Business> Businesses { get; set; } = new List<Business>();
     }
+
+    public class BusinessPhoto
+    {
+        [Key]
+        public long Id { get; set; }
+
+        // FK to Business
+        [ForeignKey(nameof(Business))]
+        public long BusinessId { get; set; }
+
+        // The URL/path where the photo is stored (could be blob URL, CDN, local path, etc.)
+        [Required]
+        [MaxLength(1000)]
+        public string Url { get; set; } = default!;
+
+        // Optional: small caption or alt text
+        [MaxLength(250)]
+        public string? Caption { get; set; }
+
+        // If true, this photo is the main/frame photo for the business
+        public bool IsMain { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAt { get; set; }
+
+        // Navigation back to business
+        [JsonIgnore]
+        public virtual Business? Business { get; set; }
+    }
 }

@@ -247,6 +247,42 @@ namespace findyy.Migrations
                     b.ToTable("BusinessLocation");
                 });
 
+            modelBuilder.Entity("findyy.Model.BusinessRegister.BusinessPhoto", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("BusinessId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Caption")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsMain")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessId");
+
+                    b.ToTable("BusinessPhoto");
+                });
+
             modelBuilder.Entity("findyy.Model.BusinessReview.BusinessReview", b =>
                 {
                     b.Property<long>("Id")
@@ -370,6 +406,17 @@ namespace findyy.Migrations
                     b.HasOne("findyy.Model.BusinessRegister.Business", "Business")
                         .WithOne("Location")
                         .HasForeignKey("findyy.Model.BusinessRegister.BusinessLocation", "BusinessId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Business");
+                });
+
+            modelBuilder.Entity("findyy.Model.BusinessRegister.BusinessPhoto", b =>
+                {
+                    b.HasOne("findyy.Model.BusinessRegister.Business", "Business")
+                        .WithMany()
+                        .HasForeignKey("BusinessId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

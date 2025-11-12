@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<BusinessLocation> BusinessLocation { get; set; }
     public DbSet<BusinessHour> BusinessHour { get; set; }
     public DbSet<BusinessCategory> BusinessCategory { get; set; }
+    public DbSet<BusinessPhoto> BusinessPhoto { get; set; }
     public DbSet<BusinessReview> BusinessReview { get; set; }
     public DbSet<ChatMessageModel> ChatMessages { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
