@@ -1,0 +1,92 @@
+CREATE OR ALTER PROCEDURE [dbo].[sp_SearchBusinesses]
+    @Category NVARCHAR(100) = NULL,
+    @Location NVARCHAR(100) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        b.Id AS BusinessId,
+        b.Name AS BusinessName,
+        b.Description,
+        b.Website,
+        b.Phone,
+        b.Email,
+        b.IsVerified,
+        b.Status,
+
+        -- ✅ Compute average rating as DECIMAL(5,2)
+        CAST(ISNULL(AVG(CAST(br.RatingStarCount AS DECIMAL(5,2))), 0) AS DECIMAL(5,2)) AS AvgRating,
+
+        -- ✅ Total review count
+        COUNT(br.Id) AS ReviewCount,
+
+        b.CreatedAt,
+        b.UpdatedAt,
+        b.OwnerUserId,
+        bc.Name AS CategoryName,
+
+        -- ✅ Business Location (JSON)
+        ISNULL(JSON_QUERY((
+            SELECT TOP 1
+                bl.Id AS LocationId,
+                bl.AddressLine1,
+                bl.AddressLine2,
+                bl.City,
+                bl.State,
+                bl.Country,
+                bl.PostalCode,
+                bl.Latitude,
+                bl.Longitude
+            FROM BusinessLocation bl
+            WHERE bl.BusinessId = b.Id
+            FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
+        )), '{}') AS [Location],
+
+        -- ✅ Business Hours (JSON)
+        ISNULL(JSON_QUERY((
+            SELECT 
+                bh.Id AS BusinessHourId,
+                bh.DayOfWeek,
+                bh.OpenTime,
+                bh.CloseTime,
+                bh.IsClosed
+            FROM BusinessHour bh
+            WHERE bh.BusinessId = b.Id
+            ORDER BY bh.DayOfWeek
+            FOR JSON PATH
+        )), '[]') AS [Hours]
+
+    FROM Business b
+    INNER JOIN BusinessCategory bc ON b.BusinessCategoryId = bc.Id
+    LEFT JOIN BusinessReview br ON br.BusinessId = b.Id  -- ✅ Include review data
+
+    WHERE
+        (@Category IS NULL OR @Category = '' OR bc.Name LIKE '%' + @Category + '%')
+        AND
+        (
+            @Location IS NULL OR @Location = '' OR
+            EXISTS (
+                SELECT 1
+                FROM BusinessLocation bl
+                WHERE bl.BusinessId = b.Id
+                AND (
+                    bl.City LIKE '%' + @Location + '%' OR
+                    bl.State LIKE '%' + @Location + '%' OR
+                    bl.Country LIKE '%' + @Location + '%' OR
+                    bl.PostalCode LIKE '%' + @Location + '%' OR
+                    bl.AddressLine1 LIKE '%' + @Location + '%' OR
+                    bl.AddressLine2 LIKE '%' + @Location + '%'
+                )
+            )
+        )
+    GROUP BY 
+        b.Id, b.Name, b.Description, b.Website, b.Phone, b.Email,
+        b.IsVerified, b.Status, b.CreatedAt, b.UpdatedAt, b.OwnerUserId, bc.Name
+
+    ORDER BY 
+        AvgRating DESC, ReviewCount DESC, b.Name
+
+    FOR JSON PATH;
+END
+GO

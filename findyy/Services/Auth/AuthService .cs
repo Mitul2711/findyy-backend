@@ -123,7 +123,6 @@ namespace LocalBizFinder.Business.Services
                         new Claim("email", userExists.Email),
                         new Claim("businessName", userExists.BusinessName),
                         new Claim("businessCategory", userExists.BusinessCategoryId.ToString()),
-                        new Claim("email", userExists.Email),
                         new Claim("first_name", userExists.FirstName),
                         new Claim("last_name", userExists.LastName),
                         new Claim("UserId", userExists.Id.ToString(),  ClaimValueTypes.Integer),

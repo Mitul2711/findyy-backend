@@ -22,11 +22,16 @@ BEGIN
         SELECT * FROM AppUsers WHERE Email = @Email;
     END
 
+	IF @Action = 'GET_BY_ID'
+    BEGIN
+        SELECT * FROM AppUsers WHERE Id = @Id;
+    END
+
     -- POST register new user
     IF @Action = 'POST'
     BEGIN
         INSERT INTO AppUsers (
-            Id, FirstName, LastName, BusinessName, BusinessCategory, Email, PasswordHash, Role, City, Phone,
+            Id, FirstName, LastName, BusinessName, BusinessCategoryId, Email, PasswordHash, Role, City, Phone,
             IsEmailVerified, Status, CreatedAt, EmailVerificationToken, VerificationTokenExpiry
         )
         VALUES (

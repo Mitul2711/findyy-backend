@@ -1,0 +1,88 @@
+CREATE OR ALTER PROCEDURE sp_ManageBusinessReview
+    @Action NVARCHAR(200),             -- 'INSERT', 'UPDATE', 'DELETE', 'SELECT'
+    @Id BIGINT = NULL,                -- Review Id (for Update/Delete/Select single)
+    @BusinessId BIGINT = NULL,        -- Business Id
+    @RatingStarCount INT = NULL,      -- Rating (1-5)
+    @Name NVARCHAR(100) = NULL,
+    @Email NVARCHAR(100) = NULL,
+    @ReviewTitle NVARCHAR(200) = NULL,
+    @ReviewDescription NVARCHAR(MAX) = NULL,
+    @CreatedBy UNIQUEIDENTIFIER = NULL,
+    @UpdatedBy UNIQUEIDENTIFIER = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @Action = 'INSERT'
+    BEGIN
+        INSERT INTO BusinessReview
+            (BusinessId, RatingStarCount, Name, Email, ReviewTitle, ReviewDescription, CreatedBy, CreatedAt)
+        VALUES
+            (@BusinessId, @RatingStarCount, @Name, @Email, @ReviewTitle, @ReviewDescription, 
+             @CreatedBy, GETUTCDATE());
+
+        SELECT SCOPE_IDENTITY() AS NewReviewId;
+    END
+
+    ELSE IF @Action = 'UPDATE'
+    BEGIN
+        UPDATE BusinessReview
+        SET
+            BusinessId = @BusinessId,
+            RatingStarCount = @RatingStarCount,
+            Name = @Name,
+            Email = @Email,
+            ReviewTitle = @ReviewTitle,
+            ReviewDescription = @ReviewDescription,
+            UpdatedBy = @UpdatedBy,
+            UpdatedAt = GETUTCDATE()
+        WHERE Id = @Id;
+
+        SELECT @Id AS UpdatedReviewId;
+    END
+
+    ELSE IF @Action = 'DELETE'
+    BEGIN
+        DELETE FROM BusinessReview
+        WHERE Id = @Id;
+
+        SELECT @Id AS DeletedReviewId;
+    END
+
+    ELSE IF @Action = 'SELECTFORUSER'
+    BEGIN
+        IF @CreatedBy IS NOT NULL
+        BEGIN
+            SELECT *
+            FROM BusinessReview
+            WHERE CreatedBy = @CreatedBy;
+        END
+        ELSE
+        BEGIN
+            SELECT *
+            FROM BusinessReview
+            ORDER BY Id DESC;
+        END
+    END
+
+	ELSE IF @Action = 'SELECTFORBUSINESS'
+    BEGIN
+        IF @CreatedBy IS NOT NULL
+        BEGIN
+            SELECT *
+            FROM BusinessReview
+            WHERE BusinessId = @BusinessId;
+        END
+        ELSE
+        BEGIN
+            SELECT *
+            FROM BusinessReview
+            ORDER BY Id DESC;
+        END
+    END
+
+    ELSE
+    BEGIN
+        RAISERROR('Invalid Action. Use INSERT, UPDATE, DELETE, or SELECT.', 16, 1);
+    END
+END

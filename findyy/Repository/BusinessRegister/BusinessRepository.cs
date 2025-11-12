@@ -15,29 +15,85 @@ namespace findyy.Repository.BusinessRegister
         // ------------------- Business -------------------
         public async Task<Business?> GetBusinessAsync(Guid id)
         {
+            // ✅ Step 1: Fetch the business with its related data
             var business = await _db.Business
                 .Include(b => b.Location)
                 .Include(b => b.Hours)
-                .Include(b => b.BusinessCategory) // 🔹 Include category relation
+                .Include(b => b.BusinessCategory)
                 .Where(b => b.OwnerUserId == id)
                 .OrderByDescending(b => b.CreatedAt)
                 .FirstOrDefaultAsync();
 
+            if (business == null)
+                return null;
+
+            // ✅ Step 2: Fetch review stats for this business
+            var reviewStats = await _db.BusinessReview
+                .Where(r => r.BusinessId == business.Id)
+                .GroupBy(r => r.BusinessId)
+                .Select(g => new
+                {
+                    AvgRating = (decimal)g.Average(r => (decimal?)r.RatingStarCount)!,
+                    ReviewCount = g.Count()
+                })
+                .FirstOrDefaultAsync();
+
+            // ✅ Step 3: Assign computed values
+            if (reviewStats != null)
+            {
+                business.AvgRating = reviewStats.AvgRating;
+                business.ReviewCount = reviewStats.ReviewCount;
+            }
+            else
+            {
+                business.AvgRating = 0;
+                business.ReviewCount = 0;
+            }
+
             return business;
         }
 
+
         public async Task<List<Business>> GetAllBusinessesAsync()
         {
+            // ✅ Step 1: Preload review stats (average + count)
+            var reviewStats = await _db.BusinessReview
+                .GroupBy(r => r.BusinessId)
+                .Select(g => new
+                {
+                    BusinessId = g.Key,
+                    AvgRating = (decimal)g.Average(r => (decimal?)r.RatingStarCount)!, // safely cast to decimal
+                    ReviewCount = g.Count()
+                })
+                .ToDictionaryAsync(x => x.BusinessId);
+
+            // ✅ Step 2: Load businesses with related data
             var businesses = await _db.Business
                 .Include(b => b.Location)
                 .Include(b => b.Owner)
                 .Include(b => b.Hours)
-                .Include(b => b.BusinessCategory) // 🔹 Include category relation
+                .Include(b => b.BusinessCategory)
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
 
+            // ✅ Step 3: Merge stats into each business
+            foreach (var b in businesses)
+            {
+                if (reviewStats.TryGetValue(b.Id, out var stats))
+                {
+                    b.AvgRating = stats.AvgRating;
+                    b.ReviewCount = stats.ReviewCount;
+                }
+                else
+                {
+                    b.AvgRating = 0;
+                    b.ReviewCount = 0;
+                }
+            }
+
             return businesses;
         }
+
 
         public async Task<long> CreateBusinessAsync(BusinessDto dto)
         {

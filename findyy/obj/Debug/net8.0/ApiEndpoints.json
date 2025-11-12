@@ -337,5 +337,106 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "findyy.Controllers.BusinessReviewController",
+    "Method": "CreateReview",
+    "RelativePath": "api/BusinessReview",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "findyy.DTO.Business.BusinessReviewDTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "findyy.Controllers.BusinessReviewController",
+    "Method": "GetAllForBusinessReviewAsync",
+    "RelativePath": "api/BusinessReview/business/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Nullable\u00601[[System.Int64, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "findyy.Controllers.BusinessReviewController",
+    "Method": "GetAllReviewAsync",
+    "RelativePath": "api/BusinessReview/user/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Nullable\u00601[[System.Guid, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "findyy.Controllers.ChatMessageController",
+    "Method": "GetAllChatsForUser",
+    "RelativePath": "api/ChatMessage/GetAllChatsForUser",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "senderId",
+        "Type": "System.Guid",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "findyy.Controllers.ChatMessageController",
+    "Method": "GetChatBetweenUsers",
+    "RelativePath": "api/ChatMessage/GetChatBetweenUsers",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "senderId",
+        "Type": "System.Guid",
+        "IsRequired": false
+      },
+      {
+        "Name": "receiverId",
+        "Type": "System.Guid",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "findyy.Controllers.SearchBusinessController",
+    "Method": "GetAllBusinesses",
+    "RelativePath": "api/SearchBusiness",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "data",
+        "Type": "findyy.DTO.SearchBusinessDTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   }
 ]

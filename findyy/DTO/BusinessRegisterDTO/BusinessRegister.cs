@@ -1,4 +1,5 @@
 ﻿using findyy.Model.BusinessRegister;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace findyy.DTO.Business
 {
@@ -92,5 +93,17 @@ namespace findyy.DTO.Business
         public List<BusinessHour>? Hours { get; set; }
     }
 
+    public class BusinessReviewDTO
+    {
+        public long Id { get; set; }
+        public long BusinessId { get; set; }
+        public int RatingStarCount { get; set; }
+        public string Name { get; set; }
+        public string Email { get; set; }
+        public string ReviewTitle { get; set; }
+        public string ReviewDescription { get; set; }
+        public Guid CreatedBy { get; set; }
+        public Guid UpdatedBy { get; set; }
+    }
 
 }
