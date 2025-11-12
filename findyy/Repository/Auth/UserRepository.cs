@@ -19,6 +19,15 @@ namespace LocalBizFinder.DataAccess.Repositories
 
             return user.FirstOrDefault();
         }
+
+        public async Task<User> GetUserByIdAsync(Guid id)
+        {
+            var user = await _db.Users
+                    .FromSqlInterpolated($"EXEC sp_RegisterUser @Action = {"GET_BY_ID"}, @Id = {id}")
+                    .ToListAsync();
+
+            return user.FirstOrDefault();
+        }
         public async Task RegisterAsync(RegisterDto user)
         {
             if (user.BusinessCategoryId == 0)

@@ -1,0 +1,131 @@
+CREATE OR ALTER PROCEDURE [dbo].[sp_GetChatBetweenUsers]
+    @SenderId UNIQUEIDENTIFIER,
+    @ReceiverId UNIQUEIDENTIFIER = NULL,  -- ✅ made optional
+    @Action NVARCHAR(50) = 'GetChatBetweenUsers'  -- ✅ added action parameter
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- ✅ ACTION 1: GET CHAT BETWEEN TWO USERS
+    IF (@Action = 'GetChatBetweenUsers' AND @ReceiverId IS NOT NULL)
+    BEGIN
+        -- ===== 1️⃣ LAST MESSAGE SENT BY RECEIVER =====
+        SELECT TOP 1 
+            cm.Id,
+            cm.SenderId,
+            cm.ReceiverId,
+            cm.Message,
+            cm.SentAt,
+            cm.Unread
+        INTO #LastMessage
+        FROM ChatMessages cm
+        WHERE cm.SenderId = @ReceiverId AND cm.ReceiverId = @SenderId
+        ORDER BY cm.SentAt DESC;
+
+        -- ===== 2️⃣ FULL CHAT HISTORY =====
+        SELECT 
+            cm.Id,
+            cm.SenderId,
+            cm.ReceiverId,
+            cm.Message,
+            cm.SentAt,
+            cm.Unread
+        INTO #ChatHistory
+        FROM ChatMessages cm
+        WHERE 
+            (cm.SenderId = @SenderId AND cm.ReceiverId = @ReceiverId)
+            OR
+            (cm.SenderId = @ReceiverId AND cm.ReceiverId = @SenderId)
+        ORDER BY cm.SentAt ASC;
+
+        -- ===== 3️⃣ RETURN BOTH =====
+        DECLARE @LastMessageJson NVARCHAR(MAX);
+        DECLARE @ChatHistoryJson NVARCHAR(MAX);
+
+        SELECT @LastMessageJson = (
+            SELECT TOP 1 
+                lm.Id,
+                lm.SenderId,
+                lm.ReceiverId,
+                lm.Message,
+                lm.SentAt,
+                lm.Unread
+            FROM #LastMessage lm
+            FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
+        );
+
+        SELECT @ChatHistoryJson = (
+            SELECT 
+                ch.Id,
+                ch.SenderId,
+                ch.ReceiverId,
+                ch.Message,
+                ch.SentAt,
+                ch.Unread
+            FROM #ChatHistory ch
+            ORDER BY ch.SentAt
+            FOR JSON PATH
+        );
+
+        SELECT 
+            JSON_QUERY(@LastMessageJson) AS LastMessage,
+            JSON_QUERY(@ChatHistoryJson) AS ChatHistory;
+
+        DROP TABLE #LastMessage;
+        DROP TABLE #ChatHistory;
+    END
+
+
+    -- ✅ ACTION 2: GET ALL RECEIVER IDS + LAST MESSAGE PER RECEIVER
+    ELSE IF (@Action = 'GetAllChatsForUser')
+BEGIN
+    ;WITH ChatSummary AS
+    (
+        SELECT 
+            CASE 
+                WHEN SenderId = @SenderId THEN ReceiverId 
+                ELSE SenderId 
+            END AS ReceiverId,
+            MAX(SentAt) AS LastMessageTime
+        FROM ChatMessages
+        WHERE SenderId = @SenderId OR ReceiverId = @SenderId
+        GROUP BY CASE 
+                    WHEN SenderId = @SenderId THEN ReceiverId 
+                    ELSE SenderId 
+                 END
+    )
+    SELECT 
+        cs.ReceiverId,
+
+        -- ✅ Last message between sender and receiver
+        (
+            SELECT TOP 1 
+                cm.Id,
+                cm.SenderId,
+                cm.ReceiverId,
+                cm.Message,
+                cm.SentAt,
+                cm.Unread,
+				-- ✅ Count of unread messages (receiver → sender)
+        (
+            SELECT COUNT(*) 
+            FROM ChatMessages cu
+            WHERE cu.ReceiverId = @SenderId 
+              AND cu.Unread = 1
+        ) AS UnreadCount
+            FROM ChatMessages cm
+            WHERE 
+                (cm.SenderId = @SenderId AND cm.ReceiverId = cs.ReceiverId)
+                OR
+                (cm.SenderId = cs.ReceiverId AND cm.ReceiverId = @SenderId)
+            ORDER BY cm.SentAt DESC
+            FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
+        ) AS LastMessage
+
+    FROM ChatSummary cs
+    FOR JSON PATH;
+END
+END;
+GO
+
+
