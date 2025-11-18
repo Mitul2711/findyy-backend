@@ -1,4 +1,6 @@
 ﻿using findyy.DTO.Auth;
+using findyy.Repositories.BusinessPhotoRepository;
+using findyy.Repositories.BusinessPhotoRepository.Interface;
 using findyy.Repository.BusinessCategoryRepo.Interface;
 using findyy.Repository.BusinessDash;
 using findyy.Repository.BusinessDash.Interface;
@@ -16,6 +18,8 @@ using findyy.Services.Auth;
 using findyy.Services.Auth.Interface;
 using findyy.Services.BusinessDash;
 using findyy.Services.BusinessDash.Interface;
+using findyy.Services.BusinessPhotoService;
+using findyy.Services.BusinessPhotoService.Interface;
 using findyy.Services.BusinessRegister;
 using findyy.Services.BusinessRegister.Interface;
 using findyy.Services.BusinessReview;
@@ -70,6 +74,9 @@ builder.Services.AddScoped<ISearchBusinessService, SearchBusinessService>();
 
 builder.Services.AddScoped<IBusinessReviewRepository, BusinessReviewRepository>();
 builder.Services.AddScoped<IBusinessReviewService, BusinessReviewService>();
+
+builder.Services.AddScoped<IBusinessPhotoService, BusinessPhotoService>();
+builder.Services.AddScoped<IBusinessPhotoRepository, BusinessPhotoRepository>();
 
 builder.Services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
 builder.Services.AddScoped<IChatMessageService, ChatMessageService>();
@@ -142,6 +149,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseStaticFiles();
 
 app.UseCors("AllowAngular");
 app.UseAuthentication();

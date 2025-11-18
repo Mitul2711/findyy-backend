@@ -1,0 +1,72 @@
+CREATE OR ALTER PROCEDURE dbo.sp_BusinessPhotos
+    @Action NVARCHAR(50),
+    @PhotoId BIGINT = NULL,
+    @BusinessId BIGINT = NULL,
+    @Url NVARCHAR(1000) = NULL,
+    @Caption NVARCHAR(250) = NULL,
+    @IsMain BIT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @Action = 'Add'
+    BEGIN
+        -- If IsMain = 1, unset existing mains for this business
+        IF @IsMain = 1
+        BEGIN
+            UPDATE dbo.BusinessPhotos
+            SET IsMain = 0
+            WHERE BusinessId = @BusinessId AND IsMain = 1;
+        END
+
+        INSERT INTO dbo.BusinessPhotos (BusinessId, Url, Caption, IsMain, CreatedAt)
+        VALUES (@BusinessId, @Url, @Caption, ISNULL(@IsMain, 0), GETUTCDATE());
+
+        SELECT SCOPE_IDENTITY() AS InsertedId;
+        RETURN;
+    END
+
+    IF @Action = 'SetMain'
+    BEGIN
+        -- Unset other mains
+        UPDATE dbo.BusinessPhotos
+        SET IsMain = 0
+        WHERE BusinessId = @BusinessId AND IsMain = 1;
+
+        -- Set requested photo as main
+        UPDATE dbo.BusinessPhotos
+        SET IsMain = 1, UpdatedAt = GETUTCDATE()
+        WHERE Id = @PhotoId AND BusinessId = @BusinessId;
+
+        SELECT 1 AS Success;
+        RETURN;
+    END
+
+    IF @Action = 'Delete'
+    BEGIN
+        -- Return url before deleting so caller can delete file
+        SELECT Url FROM dbo.BusinessPhotos WHERE Id = @PhotoId AND BusinessId = @BusinessId;
+
+        DELETE FROM dbo.BusinessPhotos WHERE Id = @PhotoId AND BusinessId = @BusinessId;
+        RETURN;
+    END
+
+    IF @Action = 'GetByBusiness'
+    BEGIN
+        SELECT Id, BusinessId, Url, Caption, IsMain, CreatedAt, UpdatedAt
+        FROM dbo.BusinessPhotos
+        WHERE BusinessId = @BusinessId
+        ORDER BY Id;
+        RETURN;
+    END
+
+    IF @Action = 'GetMain'
+    BEGIN
+        SELECT Id, BusinessId, Url, Caption, IsMain, CreatedAt, UpdatedAt
+        FROM dbo.BusinessPhotos
+        WHERE BusinessId = @BusinessId AND IsMain = 1;
+        RETURN;
+    END
+
+END
+GO
