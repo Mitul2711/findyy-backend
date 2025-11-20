@@ -60,6 +60,12 @@ namespace findyy.Services.BusinessPhotoService
 
                 var relativePath = $"/uploads/business/{businessId}/{fileName}";
 
+                if (isMain)
+                {
+                    // ensure only one main photo
+                    await _repo.ClearMainAsync(businessId);
+                }
+
                 var photo = new BusinessPhoto
                 {
                     BusinessId = businessId,
@@ -143,5 +149,50 @@ namespace findyy.Services.BusinessPhotoService
 
             await _repo.DeleteByBusinessIdAsync(businessId);
         }
+
+        public async Task<Response> DeleteAsync(long photoId)
+        {
+            try
+            {
+                var photo = await _repo.GetByIdAsync(photoId);
+                if (photo == null)
+                {
+                    return new Response
+                    {
+                        Status = false,
+                        Message = "Photo not found",
+                        Data = null
+                    };
+                }
+
+                var webRoot = GetWebRootPath();
+                var relativePath = photo.Url?.TrimStart('/', '\\') ?? string.Empty;
+                var fullPath = Path.Combine(webRoot, relativePath.Replace("/", Path.DirectorySeparatorChar.ToString()));
+
+                if (File.Exists(fullPath))
+                {
+                    try { File.Delete(fullPath); } catch { /* log if needed */ }
+                }
+
+                await _repo.DeleteByIdAsync(photoId);
+
+                return new Response
+                {
+                    Status = true,
+                    Message = "Photo deleted successfully",
+                    Data = null
+                };
+            }
+            catch (Exception ex)
+            {
+                return new Response
+                {
+                    Status = false,
+                    Message = $"Failed to delete photo: {ex.Message}",
+                    Data = null
+                };
+            }
+        }
+
     }
 }

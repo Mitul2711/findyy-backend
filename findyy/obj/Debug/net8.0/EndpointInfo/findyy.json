@@ -610,6 +610,13 @@
                   },
                   "MainCaption": {
                     "type": "string"
+                  },
+                  "RemovedPhotoIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int64"
+                    }
                   }
                 }
               },
@@ -624,6 +631,9 @@
                   "style": "form"
                 },
                 "MainCaption": {
+                  "style": "form"
+                },
+                "RemovedPhotoIds": {
                   "style": "form"
                 }
               }

@@ -57,4 +57,38 @@ public class BusinessPhotoRepository : IBusinessPhotoRepository
             parameters
         );
     }
+
+    public async Task<BusinessPhoto?> GetByIdAsync(long id)
+    {
+        var list = await _db.BusinessPhoto
+            .FromSqlInterpolated($"EXEC sp_BusinessPhotos @Action = {"GET"}, @Id = {id}")
+            .ToListAsync();
+
+        return list.FirstOrDefault();
+    }
+
+    public async Task DeleteByIdAsync(long id)
+    {
+        var parameters = new[]
+        {
+        new SqlParameter("@Action", "DELETE"),
+        new SqlParameter("@Id", id)
+    };
+
+        await _db.Database.ExecuteSqlRawAsync(
+            "EXEC sp_BusinessPhotos @Action=@Action, @Id=@Id",
+            parameters
+        );
+    }
+
+    // not using SP, just direct update – simple and fine
+    public async Task ClearMainAsync(long businessId)
+    {
+        var param = new SqlParameter("@BusinessId", businessId);
+        await _db.Database.ExecuteSqlRawAsync(
+            "UPDATE BusinessPhoto SET IsMain = 0 WHERE BusinessId = @BusinessId",
+            param
+        );
+    }
+
 }

@@ -7,5 +7,6 @@ namespace findyy.Services.BusinessPhotoService.Interface
         Task<Response> AddAsync(long businessId, IFormFile file, bool isMain, string? caption);
         Task<Response> GetByBusinessIdAsync(long businessId);
         Task RemoveAllForBusinessAsync(long businessId);
+        Task<Response> DeleteAsync(long photoId);
     }
 }

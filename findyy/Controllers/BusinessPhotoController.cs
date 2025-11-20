@@ -19,34 +19,34 @@ namespace findyy.Controllers
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> UploadPhotos([FromForm] BusinessphotoDTO dto)
         {
-            if (dto.MainPhoto == null || dto.MainPhoto.Length == 0)
-                return BadRequest("Main photo is required.");
-
-            // Remove old photos
-            await _service.RemoveAllForBusinessAsync(dto.BusinessId);
-
-            // Save main photo
-            var mainResult = await _service.AddAsync(
-                dto.BusinessId,
-                dto.MainPhoto,
-                true,
-                dto.MainCaption ?? "Main photo"
-            );
-
-            if (!mainResult.Status)
-                return Ok(mainResult);
-
-            // Save additional photos
-            if (dto.AdditionalPhotos != null)
+            // 0) delete removed photos (if any)
+            if (dto.RemovedPhotoIds != null && dto.RemovedPhotoIds.Count > 0)
             {
-                foreach (var file in dto.AdditionalPhotos)
+                foreach (var id in dto.RemovedPhotoIds)
                 {
-                    if (file != null && file.Length > 0)
-                        await _service.AddAsync(dto.BusinessId, file, false, "Additional photo");
+                    await _service.DeleteAsync(id);
                 }
             }
 
-            return Ok(mainResult);
+            // 1) upload new main photo (optional)
+            if (dto.MainPhoto != null && dto.MainPhoto.Length > 0)
+            {
+                var mainResult = await _service.AddAsync(dto.BusinessId, dto.MainPhoto, true, dto.MainCaption ?? "Main photo");
+                if (!mainResult.Status)
+                    return Ok(mainResult);
+            }
+
+            // 2) upload new additional photos (optional)
+            if (dto.AdditionalPhotos != null && dto.AdditionalPhotos.Count > 0)
+            {
+                foreach (var file in dto.AdditionalPhotos)
+                {
+                    if (file == null || file.Length == 0) continue;
+                    await _service.AddAsync(dto.BusinessId, file, false, "Additional photo");
+                }
+            }
+
+            return Ok(new { status = true, message = "Photos updated successfully" });
         }
 
 
