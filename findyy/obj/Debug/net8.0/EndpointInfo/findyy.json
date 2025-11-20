@@ -582,37 +582,60 @@
         }
       }
     },
-    "/api/businesses/{businessId}/photos": {
+    "/api/BusinessPhoto/bulk": {
       "post": {
         "tags": [
-          "BusinessPhotos"
-        ],
-        "parameters": [
-          {
-            "name": "businessId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
+          "BusinessPhoto"
         ],
         "requestBody": {
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/BusinessPhoto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BusinessPhoto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/BusinessPhoto"
+                "type": "object",
+                "properties": {
+                  "BusinessId": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "MainPhoto": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "AdditionalPhotos": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  },
+                  "MainCaption": {
+                    "type": "string"
+                  },
+                  "RemovedPhotoIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int64"
+                    }
+                  }
+                }
+              },
+              "encoding": {
+                "BusinessId": {
+                  "style": "form"
+                },
+                "MainPhoto": {
+                  "style": "form"
+                },
+                "AdditionalPhotos": {
+                  "style": "form"
+                },
+                "MainCaption": {
+                  "style": "form"
+                },
+                "RemovedPhotoIds": {
+                  "style": "form"
+                }
               }
             }
           }
@@ -622,133 +645,17 @@
             "description": "OK"
           }
         }
-      },
-      "get": {
-        "tags": [
-          "BusinessPhotos"
-        ],
-        "parameters": [
-          {
-            "name": "businessId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
       }
     },
-    "/api/businesses/{businessId}/photos/main": {
+    "/api/BusinessPhoto": {
       "get": {
         "tags": [
-          "BusinessPhotos"
+          "BusinessPhoto"
         ],
         "parameters": [
           {
             "name": "businessId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/businesses/{businessId}/photos/{photoId}/set-main": {
-      "post": {
-        "tags": [
-          "BusinessPhotos"
-        ],
-        "parameters": [
-          {
-            "name": "businessId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "photoId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/businesses/{businessId}/photos/{photoId}": {
-      "delete": {
-        "tags": [
-          "BusinessPhotos"
-        ],
-        "parameters": [
-          {
-            "name": "businessId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "photoId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "BusinessPhotos"
-        ],
-        "parameters": [
-          {
-            "name": "businessId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "photoId",
-            "in": "path",
-            "required": true,
+            "in": "query",
             "schema": {
               "type": "integer",
               "format": "int64"
@@ -1102,45 +1009,6 @@
           "longitude": {
             "type": "number",
             "format": "double"
-          }
-        },
-        "additionalProperties": false
-      },
-      "BusinessPhoto": {
-        "required": [
-          "url"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "businessId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "url": {
-            "maxLength": 1000,
-            "minLength": 1,
-            "type": "string"
-          },
-          "caption": {
-            "maxLength": 250,
-            "type": "string",
-            "nullable": true
-          },
-          "isMain": {
-            "type": "boolean"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
           }
         },
         "additionalProperties": false

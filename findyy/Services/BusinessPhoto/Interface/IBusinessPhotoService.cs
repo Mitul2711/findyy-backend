@@ -4,10 +4,9 @@ namespace findyy.Services.BusinessPhotoService.Interface
 {
     public interface IBusinessPhotoService
     {
-        Task<Response> AddPhotoAsync(BusinessPhoto photo);
-        Task<Response> SetMainPhotoAsync(long businessId, long photoId);
-        Task<Response> DeletePhotoAsync(long businessId, long photoId);
-        Task<Response> GetPhotosByBusinessAsync(long businessId);
-        Task<Response> GetMainPhotoAsync(long businessId);
+        Task<Response> AddAsync(long businessId, IFormFile file, bool isMain, string? caption);
+        Task<Response> GetByBusinessIdAsync(long businessId);
+        Task RemoveAllForBusinessAsync(long businessId);
+        Task<Response> DeleteAsync(long photoId);
     }
 }

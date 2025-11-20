@@ -166,7 +166,7 @@ namespace findyy.Repository.BusinessRegister
         public async Task<BusinessLocation?> GetBusinessLocationAsync(long id)
         {
             var locations = await _db.BusinessLocation
-                .FromSqlInterpolated($"EXEC sp_BusinessLocation @Action = {"GET"}, @Id = {id}")
+                .FromSqlInterpolated($"EXEC sp_BusinessLocation @Action = {"GET_BY_BUSINESS"}, @BusinessId = {id}")
                 .ToListAsync();
 
             return locations.FirstOrDefault();

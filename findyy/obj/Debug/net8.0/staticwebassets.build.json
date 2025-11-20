@@ -1,12 +1,125 @@
 {
   "Version": 1,
-  "Hash": "2SqKxFHSHLTtTWJj16HcQoRvZVU/C0cCVd2Q48wS06s=",
+  "Hash": "1oZEQ3C32WRA4HrorJ29d9prlt8b2S9nIeOrz65QiT8=",
   "Source": "findyy",
   "BasePath": "_content/findyy",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
-  "Assets": [],
-  "Endpoints": []
+  "DiscoveryPatterns": [
+    {
+      "Name": "findyy\\wwwroot",
+      "Source": "findyy",
+      "ContentRoot": "D:\\findyyy-backend\\findyy\\findyy\\wwwroot\\",
+      "BasePath": "_content/findyy",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "D:\\findyyy-backend\\findyy\\findyy\\wwwroot\\uploads\\business\\1\\0dba7bcf-64f7-4164-9fc8-fd1156da96ad.png",
+      "SourceId": "findyy",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\findyyy-backend\\findyy\\findyy\\wwwroot\\",
+      "BasePath": "_content/findyy",
+      "RelativePath": "uploads/business/1/0dba7bcf-64f7-4164-9fc8-fd1156da96ad#[.{fingerprint}]?.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "gkynwlhcqt",
+      "Integrity": "QE0iHcKLbw3vBKDIM4kIjni8LF7I1i9jIVICAm77I6Y=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\business\\1\\0dba7bcf-64f7-4164-9fc8-fd1156da96ad.png"
+    }
+  ],
+  "Endpoints": [
+    {
+      "Route": "uploads/business/1/0dba7bcf-64f7-4164-9fc8-fd1156da96ad.gkynwlhcqt.png",
+      "AssetFile": "D:\\findyyy-backend\\findyy\\findyy\\wwwroot\\uploads\\business\\1\\0dba7bcf-64f7-4164-9fc8-fd1156da96ad.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "195744"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"QE0iHcKLbw3vBKDIM4kIjni8LF7I1i9jIVICAm77I6Y=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 20 Nov 2025 15:51:52 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "gkynwlhcqt"
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/business/1/0dba7bcf-64f7-4164-9fc8-fd1156da96ad.png"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-QE0iHcKLbw3vBKDIM4kIjni8LF7I1i9jIVICAm77I6Y="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/business/1/0dba7bcf-64f7-4164-9fc8-fd1156da96ad.png",
+      "AssetFile": "D:\\findyyy-backend\\findyy\\findyy\\wwwroot\\uploads\\business\\1\\0dba7bcf-64f7-4164-9fc8-fd1156da96ad.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "195744"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"QE0iHcKLbw3vBKDIM4kIjni8LF7I1i9jIVICAm77I6Y=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 20 Nov 2025 15:51:52 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-QE0iHcKLbw3vBKDIM4kIjni8LF7I1i9jIVICAm77I6Y="
+        }
+      ]
+    }
+  ]
 }

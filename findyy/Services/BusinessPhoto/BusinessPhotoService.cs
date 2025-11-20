@@ -8,34 +8,81 @@ namespace findyy.Services.BusinessPhotoService
     public class BusinessPhotoService : IBusinessPhotoService
     {
         private readonly IBusinessPhotoRepository _repo;
+        private readonly IWebHostEnvironment _env;
 
-        public BusinessPhotoService(IBusinessPhotoRepository repo)
+        public BusinessPhotoService(IBusinessPhotoRepository repo, IWebHostEnvironment env)
         {
             _repo = repo;
+            _env = env ?? throw new ArgumentNullException(nameof(env));
         }
 
-        // ✅ Add new photo
-        public async Task<Response> AddPhotoAsync(BusinessPhoto photo)
+        private string GetWebRootPath()
+        {
+            var rootPath = _env.WebRootPath;
+            if (string.IsNullOrWhiteSpace(rootPath))
+            {
+                rootPath = Path.Combine(_env.ContentRootPath, "wwwroot");
+            }
+            if (!Directory.Exists(rootPath))
+            {
+                Directory.CreateDirectory(rootPath);
+            }
+            return rootPath;
+        }
+
+        public async Task<Response> AddAsync(long businessId, IFormFile file, bool isMain, string? caption)
         {
             try
             {
-                if (photo == null || photo.BusinessId <= 0 || string.IsNullOrEmpty(photo.Url))
+                if (file == null || file.Length == 0)
                 {
                     return new Response
                     {
                         Status = false,
-                        Message = "Invalid photo details."
+                        Message = "File is empty or not provided",
+                        Data = null
                     };
                 }
 
-                var insertedId = await _repo.AddAsync(photo);
-                photo.Id = insertedId;
+                var webRoot = GetWebRootPath();
+                var uploadFolder = Path.Combine(webRoot, "uploads", "business", businessId.ToString());
+
+                if (!Directory.Exists(uploadFolder))
+                    Directory.CreateDirectory(uploadFolder);
+
+                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+                var filePath = Path.Combine(uploadFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var relativePath = $"/uploads/business/{businessId}/{fileName}";
+
+                if (isMain)
+                {
+                    // ensure only one main photo
+                    await _repo.ClearMainAsync(businessId);
+                }
+
+                var photo = new BusinessPhoto
+                {
+                    BusinessId = businessId,
+                    Url = relativePath,
+                    Caption = caption,
+                    IsMain = isMain,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                await _repo.AddAsync(photo);
 
                 return new Response
                 {
                     Status = true,
-                    Message = "Photo added successfully.",
-                    Data = photo
+                    Message = "Business photo uploaded successfully",
+                    Data = null
                 };
             }
             catch (Exception ex)
@@ -43,96 +90,22 @@ namespace findyy.Services.BusinessPhotoService
                 return new Response
                 {
                     Status = false,
-                    Message = $"Error adding photo: {ex.Message}"
+                    Message = $"Failed to upload photo: {ex.Message}",
+                    Data = null
                 };
             }
         }
 
-        // ✅ Set a photo as the main photo
-        public async Task<Response> SetMainPhotoAsync(long businessId, long photoId)
+        public async Task<Response> GetByBusinessIdAsync(long businessId)
         {
             try
             {
-                var result = await _repo.SetMainAsync(businessId, photoId);
-
-                if (!result)
-                {
-                    return new Response
-                    {
-                        Status = false,
-                        Message = "Unable to set main photo. It may not exist."
-                    };
-                }
+                var photos = await _repo.GetByBusinessIdAsync(businessId);
 
                 return new Response
                 {
                     Status = true,
-                    Message = "Main photo updated successfully."
-                };
-            }
-            catch (Exception ex)
-            {
-                return new Response
-                {
-                    Status = false,
-                    Message = $"Error setting main photo: {ex.Message}"
-                };
-            }
-        }
-
-        // ✅ Delete a photo
-        public async Task<Response> DeletePhotoAsync(long businessId, long photoId)
-        {
-            try
-            {
-                var deletedUrl = await _repo.DeleteAsync(businessId, photoId);
-
-                if (string.IsNullOrEmpty(deletedUrl))
-                {
-                    return new Response
-                    {
-                        Status = false,
-                        Message = "Photo not found or already deleted."
-                    };
-                }
-
-                return new Response
-                {
-                    Status = true,
-                    Message = "Photo deleted successfully.",
-                    Data = deletedUrl // optional: return deleted photo URL
-                };
-            }
-            catch (Exception ex)
-            {
-                return new Response
-                {
-                    Status = false,
-                    Message = $"Error deleting photo: {ex.Message}"
-                };
-            }
-        }
-
-        // ✅ Get all photos for a business
-        public async Task<Response> GetPhotosByBusinessAsync(long businessId)
-        {
-            try
-            {
-                var photos = await _repo.GetByBusinessAsync(businessId);
-
-                if (photos == null || photos.Count == 0)
-                {
-                    return new Response
-                    {
-                        Status = false,
-                        Message = "No photos found for this business."
-                    };
-                }
-
-                return new Response
-                {
-                    Status = true,
-                    Message = "Photos retrieved successfully.",
+                    Message = "Business photos retrieved successfully",
                     Data = photos
                 };
             }
@@ -141,32 +114,73 @@ namespace findyy.Services.BusinessPhotoService
                 return new Response
                 {
                     Status = false,
-                    Message = $"Error fetching photos: {ex.Message}"
+                    Message = $"Failed to retrieve photos: {ex.Message}",
+                    Data = null
                 };
             }
         }
 
-        // ✅ Get main photo of a business
-        public async Task<Response> GetMainPhotoAsync(long businessId)
+        public async Task RemoveAllForBusinessAsync(long businessId)
+        {
+            var photos = await _repo.GetByBusinessIdAsync(businessId);
+            var webRoot = GetWebRootPath();
+
+            foreach (var photo in photos)
+            {
+                if (string.IsNullOrWhiteSpace(photo.Url))
+                    continue;
+
+                // photo.Url looks like "/uploads/business/{businessId}/{fileName}"
+                var relativePath = photo.Url.TrimStart('/', '\\');
+                var fullPath = Path.Combine(webRoot, relativePath.Replace("/", Path.DirectorySeparatorChar.ToString()));
+
+                if (File.Exists(fullPath))
+                {
+                    try
+                    {
+                        File.Delete(fullPath);
+                    }
+                    catch
+                    {
+                        // optional: log, but don't stop the whole operation
+                    }
+                }
+            }
+
+            await _repo.DeleteByBusinessIdAsync(businessId);
+        }
+
+        public async Task<Response> DeleteAsync(long photoId)
         {
             try
             {
-                var mainPhoto = await _repo.GetMainAsync(businessId);
-
-                if (mainPhoto == null)
+                var photo = await _repo.GetByIdAsync(photoId);
+                if (photo == null)
                 {
                     return new Response
                     {
                         Status = false,
-                        Message = "Main photo not found."
+                        Message = "Photo not found",
+                        Data = null
                     };
                 }
+
+                var webRoot = GetWebRootPath();
+                var relativePath = photo.Url?.TrimStart('/', '\\') ?? string.Empty;
+                var fullPath = Path.Combine(webRoot, relativePath.Replace("/", Path.DirectorySeparatorChar.ToString()));
+
+                if (File.Exists(fullPath))
+                {
+                    try { File.Delete(fullPath); } catch { /* log if needed */ }
+                }
+
+                await _repo.DeleteByIdAsync(photoId);
 
                 return new Response
                 {
                     Status = true,
-                    Message = "Main photo retrieved successfully.",
-                    Data = mainPhoto
+                    Message = "Photo deleted successfully",
+                    Data = null
                 };
             }
             catch (Exception ex)
@@ -174,9 +188,11 @@ namespace findyy.Services.BusinessPhotoService
                 return new Response
                 {
                     Status = false,
-                    Message = $"Error fetching main photo: {ex.Message}"
+                    Message = $"Failed to delete photo: {ex.Message}",
+                    Data = null
                 };
             }
         }
+
     }
 }
